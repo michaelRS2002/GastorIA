@@ -12,8 +12,9 @@ export const Login = () => {
     try {
       setError(null);
       await signInWithGoogle();
-    } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Error al iniciar sesión');
       console.error('Login error:', err);
     }
   };

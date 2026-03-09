@@ -61,7 +61,7 @@ export interface ProcessAudioResponse {
   confianza: number;
   keywords: string[];
   advertencias: string[];
-  debug_info?: any;
+  debug_info?: Record<string, unknown>;
   metodo: 'ia' | 'fallback';
   error?: string;
 }

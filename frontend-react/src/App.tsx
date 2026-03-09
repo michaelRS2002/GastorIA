@@ -1,6 +1,6 @@
 // Componente principal App
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from './services/api';
 import { useToast } from './hooks/useToast';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
@@ -53,7 +53,7 @@ function AppContent() {
   }, [showToast]);
 
   // Cargar transacciones iniciales
-  const loadTransactions = async () => {
+  const loadTransactions = useCallback(async () => {
     if (!isAuthenticated) return;
     
     try {
@@ -65,10 +65,10 @@ function AppContent() {
       console.error('Error loading transactions:', error);
       showToast('Error cargando transacciones', 'error');
     }
-  };
+  }, [isAuthenticated, showToast]);
 
   // Cargar análisis
-  const loadAnalysis = async (period: AnalysisPeriod = currentPeriod) => {
+  const loadAnalysis = useCallback(async (period: AnalysisPeriod = currentPeriod) => {
     if (!isAuthenticated) return;
     
     setIsLoading(true);
@@ -83,9 +83,10 @@ function AppContent() {
       setAnalysis(data.analysis);
       setSuggestions(data.suggestions || []);
       setCurrentPeriod(period);
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       console.error('Error loading analysis:', error);
-      showToast(`Error: ${error.message}`, 'error');
+      showToast(`Error: ${err.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -107,9 +108,10 @@ function AppContent() {
       } else {
         showToast(`⚠ ${result.error || 'Error al procesar'}`, 'warning');
       }
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       console.error('Error:', error);
-      showToast(`✗ Error: ${error.message}`, 'error');
+      showToast(`✗ Error: ${err.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -140,9 +142,10 @@ function AppContent() {
       } else {
         showToast(`✗ Error: ${result.error}`, 'error');
       }
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       console.error('Error clearing data:', error);
-      showToast(`✗ Error: ${error.message}`, 'error');
+      showToast(`✗ Error: ${err.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -161,7 +164,7 @@ function AppContent() {
 
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, loadTransactions, loadAnalysis]);
 
   // Mostrar pantalla de carga mientras verifica autenticación
   if (authLoading) {
