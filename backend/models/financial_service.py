@@ -11,8 +11,9 @@ import unicodedata
 
 from models.transaction import Transaction, Analysis, Suggestion, TransactionType, AnalysisPeriod
 from utils.keyword_extractor import extract_keywords, extract_amount, verify_classification
-from utils.ollama_client import OllamaClient, create_expense_classification_prompt, create_analysis_prompt
+from utils.groq_client import GroqClient, create_expense_classification_prompt, create_analysis_prompt
 from utils.schema_validator import SchemaValidator
+from utils.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
 
@@ -26,40 +27,14 @@ def _strip_accents(value: str) -> str:
 class FinancialAnalysisService:
     """Servicio principal de análisis financiero"""
     
-    def __init__(self, data_dir: Path = Path("data"), schema_dir: Path = Path("schemas")):
-        self.data_dir = Path(data_dir)
+    def __init__(self, schema_dir: Path = Path("schemas")):
         self.schema_dir = Path(schema_dir)
-        self.transactions: List[Transaction] = []
-        self.ollama_client = OllamaClient()
+        self.groq_client = GroqClient()
         self.validator = SchemaValidator(schema_dir)
-        self._load_transactions()
+        self.supabase = get_supabase()
+        logger.info("FinancialAnalysisService inicializado con Supabase")
     
-    def _load_transactions(self):
-        """Carga transacciones desde archivo"""
-        transactions_file = self.data_dir / "transactions.json"
-        if transactions_file.exists():
-            try:
-                with open(transactions_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    self.transactions = [Transaction.from_dict(t) for t in data]
-                logger.info(f"Cargadas {len(self.transactions)} transacciones")
-            except json.JSONDecodeError:
-                logger.warning("transactions.json inválido o vacío; se reinicia con lista vacía")
-                self.transactions = []
-                self._save_transactions()
-            except Exception as e:
-                logger.error(f"Error cargando transacciones: {e}")
-    
-    def _save_transactions(self):
-        """Guarda transacciones en archivo"""
-        self.data_dir.mkdir(exist_ok=True)
-        try:
-            with open(self.data_dir / "transactions.json", 'w', encoding='utf-8') as f:
-                json.dump([t.to_dict() for t in self.transactions], f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            logger.error(f"Error guardando transacciones: {e}")
-    
-    def process_audio_input(self, text: str, use_ai: bool = True) -> Dict[str, Any]:
+    def process_audio_input(self, text: str, user_id: str, use_ai: bool = True) -> Dict[str, Any]:
         """
         Procesa entrada de audio/texto y clasifica la transacción.
         
@@ -69,6 +44,7 @@ class FinancialAnalysisService:
         
         Args:
             text: Texto a procesar
+            user_id: ID del usuario autenticado
             use_ai: Si usar IA para clasificación (recomendado True)
             
         Returns:
@@ -85,7 +61,7 @@ class FinancialAnalysisService:
         }
         
         # ============ ENFOQUE IA-FIRST ============
-        if use_ai and self.ollama_client.is_available():
+        if use_ai and self.groq_client.is_available():
             ai_result = self._process_with_ai(text)
             result["debug_info"]["ai_processing"] = ai_result
             
@@ -105,8 +81,13 @@ class FinancialAnalysisService:
                         confianza=float(ai_data.get("confianza", 0.85))
                     )
                     
-                    self.transactions.append(transaccion)
-                    self._save_transactions()
+                    # Guardar en Supabase
+                    transaction_data = transaccion.to_dict()
+                    transaction_data["user_id"] = user_id
+                    transaction_data["metodo_procesamiento"] = "ia"
+                    transaction_data["palabras_clave"] = ai_data.get("palabras_clave", [])
+                    
+                    response = self.supabase.table("transactions").insert(transaction_data).execute()
                     
                     result["success"] = True
                     result["transaccion"] = transaccion.to_dict()
@@ -163,8 +144,13 @@ class FinancialAnalysisService:
                 confianza=keywords["confianza"]
             )
             
-            self.transactions.append(transaccion)
-            self._save_transactions()
+            # Guardar en Supabase
+            transaction_data = transaccion.to_dict()
+            transaction_data["user_id"] = user_id
+            transaction_data["metodo_procesamiento"] = "fallback"
+            transaction_data["palabras_clave"] = keywords["palabras_detectadas"]
+            
+            response = self.supabase.table("transactions").insert(transaction_data).execute()
             
             result["success"] = True
             result["transaccion"] = transaccion.to_dict()
@@ -183,13 +169,13 @@ class FinancialAnalysisService:
         """
         try:
             prompt = create_expense_classification_prompt(text)
-            ai_response = self.ollama_client.generate_response(prompt, temperature=0.3)
+            ai_response = self.groq_client.generate_response(prompt, temperature=0.3)
             
             if not ai_response.get("success"):
                 return {"success": False, "error": ai_response.get("error")}
             
             response_text = ai_response["response"].get("response", "")
-            json_data = self.ollama_client.extract_json_from_response(response_text)
+            json_data = self.groq_client.extract_json_from_response(response_text)
             
             if not json_data:
                 return {"success": False, "error": "No se pudo extraer JSON de la respuesta de IA"}
@@ -235,11 +221,12 @@ class FinancialAnalysisService:
             logger.error(f"Error in AI processing: {e}")
             return {"success": False, "error": str(e)}
     
-    def generate_analysis(self, period: str = "mensual", end_date: Optional[datetime] = None) -> Analysis:
+    def generate_analysis(self, user_id: str, period: str = "mensual", end_date: Optional[datetime] = None) -> Analysis:
         """
         Genera análisis para un período
         
         Args:
+            user_id: ID del usuario
             period: Período (diario, semanal, mensual, etc.)
             end_date: Fecha final del análisis
             
@@ -261,11 +248,10 @@ class FinancialAnalysisService:
         days = period_days.get(period, 30)
         start_date = end_date - timedelta(days=days)
         
-        # Filtra transacciones del período
-        period_transactions = [
-            t for t in self.transactions
-            if start_date <= t.fecha <= end_date
-        ]
+        # Obtener transacciones del período desde Supabase
+        response = self.supabase.table("transactions").select("*").eq("user_id", user_id).gte("fecha", start_date.isoformat()).lte("fecha", end_date.isoformat()).execute()
+        
+        period_transactions = [Transaction.from_dict(t) for t in response.data]
         
         # Calcula totales
         ingresos = sum(t.cantidad for t in period_transactions if t.tipo == TransactionType.INGRESO)
@@ -349,18 +335,24 @@ class FinancialAnalysisService:
         
         return suggestions
     
-    def get_all_transactions(self) -> List[Dict]:
-        """Retorna todas las transacciones"""
-        return [t.to_dict() for t in self.transactions]
+    def get_all_transactions(self, user_id: str) -> List[Dict]:
+        """Retorna todas las transacciones del usuario"""
+        response = self.supabase.table("transactions").select("*").eq("user_id", user_id).order("fecha", desc=True).execute()
+        return response.data
     
-    def get_transactions_by_category(self, category: str) -> List[Dict]:
-        """Retorna transacciones de una categoría"""
-        return [t.to_dict() for t in self.transactions if t.categoria.value == category]
+    def get_transactions_by_category(self, user_id: str, category: str) -> List[Dict]:
+        """Retorna transacciones de una categoría del usuario"""
+        response = self.supabase.table("transactions").select("*").eq("user_id", user_id).eq("categoria", category).order("fecha", desc=True).execute()
+        return response.data
     
-    def clear_all_transactions(self) -> int:
-        """Elimina todas las transacciones y retorna cantidad eliminada"""
-        count = len(self.transactions)
-        self.transactions = []
-        self._save_transactions()
-        logger.info(f"Eliminadas {count} transacciones")
+    def clear_all_transactions(self, user_id: str) -> int:
+        """Elimina todas las transacciones del usuario y retorna cantidad eliminada"""
+        # Primero obtenemos el conteo
+        response = self.supabase.table("transactions").select("id", count="exact").eq("user_id", user_id).execute()
+        count = response.count or 0
+        
+        # Luego eliminamos
+        self.supabase.table("transactions").delete().eq("user_id", user_id).execute()
+        
+        logger.info(f"Eliminadas {count} transacciones del usuario {user_id}")
         return count

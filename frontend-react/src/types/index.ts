@@ -30,6 +30,12 @@ export interface Transaction {
   fecha: string;
   confianza: number;
   notas?: string;
+  // Campos adicionales de Supabase (opcionales)
+  user_id?: string;
+  metodo_procesamiento?: 'ia' | 'fallback' | 'manual';
+  palabras_clave?: string[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CategoryData {
@@ -68,7 +74,7 @@ export interface ProcessAudioResponse {
 
 export interface HealthResponse {
   status: string;
-  ollama_available?: boolean;
+  groq_available?: boolean;
   ai_available?: boolean;
   ai_provider?: string;
   timestamp: string;

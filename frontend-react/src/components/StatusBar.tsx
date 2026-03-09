@@ -28,8 +28,8 @@ export const StatusBar = () => {
     );
   }
 
-  const aiAvailable = health.ai_available ?? health.ollama_available;
-  const aiProvider = health.ai_provider || 'ollama';
+  const aiAvailable = health.ai_available ?? health.groq_available;
+  const aiProvider = health.ai_provider || 'groq';
   const isOffline = health.status !== 'ok';
 
   return (

@@ -49,10 +49,17 @@ class ApiClient {
       if (!response.ok) {
         // Si es 401, la sesión expiró
         if (response.status === 401) {
-          // Redirigir al login o manejar sesión expirada
           window.dispatchEvent(new CustomEvent('auth:session-expired'));
+          throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        
+        // Intentar obtener el mensaje de error del backend
+        try {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        } catch (jsonError) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
       }
 
       return await response.json();
@@ -81,7 +88,7 @@ class ApiClient {
       console.error('Health check failed:', error);
       return {
         status: 'error',
-        ollama_available: false,
+        groq_available: false,
         ai_available: false,
         timestamp: new Date().toISOString(),
       };
