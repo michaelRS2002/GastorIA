@@ -1,4 +1,4 @@
-name: Frontend CI/CD - Vercel
+name: Frontend CI/CD - Render
 
 on:
   push:
@@ -45,21 +45,15 @@ jobs:
         VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
         VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
   
-  # Job de deploy a Vercel
+  # Job de deploy a Render
   deploy:
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Deploy to Vercel (Production)
-      uses: amondnet/vercel-action@v25
+    - name: Deploy to Render
+      uses: bounceapp/render-action@0.6.0
       with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'
-        working-directory: ./frontend-react
+        render-token: ${{ secrets.RENDER_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
