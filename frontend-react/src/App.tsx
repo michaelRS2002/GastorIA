@@ -67,16 +67,17 @@ function AppContent() {
     }
   }, [isAuthenticated, showToast]);
 
-  // Cargar análisis
-  const loadAnalysis = useCallback(async (period: AnalysisPeriod = currentPeriod) => {
+// Cargar análisis
+const loadAnalysis = useCallback(
+  async (period: AnalysisPeriod = currentPeriod) => {
     if (!isAuthenticated) return;
-    
+
     setIsLoading(true);
     try {
       const data = await apiClient.getAnalysisWithSuggestions(period);
 
       if (!data.success) {
-        showToast(`Error: ${data.error}`, 'error');
+        showToast(`Error: ${data.error}`, "error");
         return;
       }
 
@@ -85,12 +86,14 @@ function AppContent() {
       setCurrentPeriod(period);
     } catch (error) {
       const err = error as Error;
-      console.error('Error loading analysis:', error);
-      showToast(`Error: ${err.message}`, 'error');
+      console.error("Error loading analysis:", error);
+      showToast(`Error: ${err.message}`, "error");
     } finally {
       setIsLoading(false);
     }
-  };
+  },
+  [currentPeriod, isAuthenticated, showToast]
+);
 
   // Procesar transacción
   const handleProcessTransaction = async (text: string, useAi: boolean) => {
