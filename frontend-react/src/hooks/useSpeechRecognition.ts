@@ -125,9 +125,13 @@ export const useSpeechRecognition = () => {
         timeoutIdRef.current = null;
       }
 
-      if (status.includes('grabando')) {
-        setStatus('lista');
-      }
+      setStatus((prevStatus) => {
+        // Si no es un error, volver a "lista"
+        if (!prevStatus.includes('error')) {
+          return 'lista';
+        }
+        return prevStatus;
+      });
     };
 
     recognitionRef.current = recognition;
@@ -137,19 +141,27 @@ export const useSpeechRecognition = () => {
         clearTimeout(timeoutIdRef.current);
       }
     };
-  }, [status]);
+  }, []);
 
   const startRecording = useCallback(() => {
-    if (recognitionRef.current && !isRecording) {
-      recognitionRef.current.start();
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.start();
+      } catch (error) {
+        console.error('Error starting recognition:', error);
+      }
     }
-  }, [isRecording]);
+  }, []);
 
   const stopRecording = useCallback(() => {
-    if (recognitionRef.current && isRecording) {
-      recognitionRef.current.stop();
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (error) {
+        console.error('Error stopping recognition:', error);
+      }
     }
-  }, [isRecording]);
+  }, []);
 
   const toggleRecording = useCallback(() => {
     if (isRecording) {
