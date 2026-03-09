@@ -2,14 +2,10 @@ name: Frontend CI/CD - Render
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
     paths:
       - 'frontend-react/**'
       - '.github/workflows/frontend-ci-cd.yml'
-  pull_request:
-    branches: [ main, master ]
-    paths:
-      - 'frontend-react/**'
 
 jobs:
   # Job de testing y linting
@@ -37,6 +33,11 @@ jobs:
         cd frontend-react
         npm run lint
     
+    - name: Run tests
+      run: |
+        cd frontend-react
+        npm run test:coverage
+    
     - name: Build project
       run: |
         cd frontend-react
@@ -49,7 +50,6 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     
     steps:
     - name: Trigger Render Deploy

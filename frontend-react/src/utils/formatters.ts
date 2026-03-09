@@ -22,6 +22,10 @@ export const formatDate = (dateString: string): string => {
   });
 };
 
+export const formatPercentage = (value: number): string => {
+  return `${value.toFixed(1)}%`;
+};
+
 export const getStatusEmoji = (type: TransactionType | Category | string): string => {
   const emojis: Record<string, string> = {
     gasto: '📉',
