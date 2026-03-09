@@ -41,6 +41,11 @@ class Transaction:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     fecha: datetime = field(default_factory=datetime.now)
     notas: Optional[str] = None
+    user_id: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    metodo_procesamiento: Optional[str] = None
+    palabras_clave: Optional[List[str]] = None
     
     def __post_init__(self):
         """Validaciones post-inicialización"""
@@ -52,6 +57,12 @@ class Transaction:
 
         if isinstance(self.fecha, str):
             self.fecha = datetime.fromisoformat(self.fecha)
+        
+        if isinstance(self.created_at, str):
+            self.created_at = datetime.fromisoformat(self.created_at)
+        
+        if isinstance(self.updated_at, str):
+            self.updated_at = datetime.fromisoformat(self.updated_at)
 
         self.cantidad = float(self.cantidad)
         self.confianza = float(self.confianza)
@@ -83,6 +94,10 @@ class Transaction:
         data["tipo"] = self.tipo.value
         data["categoria"] = self.categoria.value
         data["fecha"] = self.fecha.isoformat()
+        if self.created_at:
+            data["created_at"] = self.created_at.isoformat()
+        if self.updated_at:
+            data["updated_at"] = self.updated_at.isoformat()
         return data
     
     @classmethod

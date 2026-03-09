@@ -29,7 +29,7 @@ def _load_env_file(env_path: Path) -> None:
 
 
 # Cargar variables de entorno
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]  # backend/
 _load_env_file(PROJECT_ROOT / ".env")
 
 
@@ -39,17 +39,30 @@ class SupabaseClient:
     _instance: Optional[Client] = None
     
     @classmethod
-    def get_client(cls) -> Client:
-        """Obtiene la instancia del cliente de Supabase"""
+    def get_client(cls, access_token: Optional[str] = None) -> Client:
+        """
+        Obtiene la instancia del cliente de Supabase
+        
+        Args:
+            access_token: Token JWT del usuario para autenticación (opcional)
+        """
+        url = os.getenv("SUPABASE_URL")
+        key = os.getenv("SUPABASE_KEY")
+        
+        if not url or not key:
+            raise ValueError(
+                "SUPABASE_URL y SUPABASE_KEY deben estar configuradas en .env"
+            )
+        
+        # Si se proporciona un token, crear un cliente autenticado
+        if access_token:
+            client = create_client(url, key)
+            # Establecer el token de sesión del usuario
+            client.auth.set_session(access_token, access_token)
+            return client
+        
+        # Cliente base con anon key (para operaciones sin autenticación)
         if cls._instance is None:
-            url = os.getenv("SUPABASE_URL")
-            key = os.getenv("SUPABASE_KEY")
-            
-            if not url or not key:
-                raise ValueError(
-                    "SUPABASE_URL y SUPABASE_KEY deben estar configuradas en .env"
-                )
-            
             cls._instance = create_client(url, key)
             logger.info("Cliente de Supabase inicializado")
         
@@ -61,6 +74,11 @@ class SupabaseClient:
         return bool(os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_KEY"))
 
 
-def get_supabase() -> Client:
-    """Helper function para obtener el cliente de Supabase"""
-    return SupabaseClient.get_client()
+def get_supabase(access_token: Optional[str] = None) -> Client:
+    """
+    Helper function para obtener el cliente de Supabase
+    
+    Args:
+        access_token: Token JWT del usuario para autenticación
+    """
+    return SupabaseClient.get_client(access_token)

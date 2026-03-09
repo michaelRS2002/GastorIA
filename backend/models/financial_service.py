@@ -31,10 +31,10 @@ class FinancialAnalysisService:
         self.schema_dir = Path(schema_dir)
         self.groq_client = GroqClient()
         self.validator = SchemaValidator(schema_dir)
-        self.supabase = get_supabase()
-        logger.info("FinancialAnalysisService inicializado con Supabase")
+        # No inicializar supabase aquí, se creará por petición con el token del usuario
+        logger.info("FinancialAnalysisService inicializado")
     
-    def process_audio_input(self, text: str, user_id: str, use_ai: bool = True) -> Dict[str, Any]:
+    def process_audio_input(self, text: str, user_id: str, access_token: str, use_ai: bool = True) -> Dict[str, Any]:
         """
         Procesa entrada de audio/texto y clasifica la transacción.
         
@@ -45,6 +45,7 @@ class FinancialAnalysisService:
         Args:
             text: Texto a procesar
             user_id: ID del usuario autenticado
+            access_token: Token de acceso del usuario para Supabase
             use_ai: Si usar IA para clasificación (recomendado True)
             
         Returns:
@@ -82,12 +83,13 @@ class FinancialAnalysisService:
                     )
                     
                     # Guardar en Supabase
+                    supabase = get_supabase(access_token)
                     transaction_data = transaccion.to_dict()
                     transaction_data["user_id"] = user_id
                     transaction_data["metodo_procesamiento"] = "ia"
                     transaction_data["palabras_clave"] = ai_data.get("palabras_clave", [])
                     
-                    response = self.supabase.table("transactions").insert(transaction_data).execute()
+                    response = supabase.table("transactions").insert(transaction_data).execute()
                     
                     result["success"] = True
                     result["transaccion"] = transaccion.to_dict()
@@ -145,12 +147,13 @@ class FinancialAnalysisService:
             )
             
             # Guardar en Supabase
+            supabase = get_supabase(access_token)
             transaction_data = transaccion.to_dict()
             transaction_data["user_id"] = user_id
             transaction_data["metodo_procesamiento"] = "fallback"
             transaction_data["palabras_clave"] = keywords["palabras_detectadas"]
             
-            response = self.supabase.table("transactions").insert(transaction_data).execute()
+            response = supabase.table("transactions").insert(transaction_data).execute()
             
             result["success"] = True
             result["transaccion"] = transaccion.to_dict()
@@ -221,12 +224,13 @@ class FinancialAnalysisService:
             logger.error(f"Error in AI processing: {e}")
             return {"success": False, "error": str(e)}
     
-    def generate_analysis(self, user_id: str, period: str = "mensual", end_date: Optional[datetime] = None) -> Analysis:
+    def generate_analysis(self, user_id: str, access_token: str, period: str = "mensual", end_date: Optional[datetime] = None) -> Analysis:
         """
         Genera análisis para un período
         
         Args:
             user_id: ID del usuario
+            access_token: Token de acceso del usuario
             period: Período (diario, semanal, mensual, etc.)
             end_date: Fecha final del análisis
             
@@ -249,7 +253,8 @@ class FinancialAnalysisService:
         start_date = end_date - timedelta(days=days)
         
         # Obtener transacciones del período desde Supabase
-        response = self.supabase.table("transactions").select("*").eq("user_id", user_id).gte("fecha", start_date.isoformat()).lte("fecha", end_date.isoformat()).execute()
+        supabase = get_supabase(access_token)
+        response = supabase.table("transactions").select("*").eq("user_id", user_id).gte("fecha", start_date.isoformat()).lte("fecha", end_date.isoformat()).execute()
         
         period_transactions = [Transaction.from_dict(t) for t in response.data]
         
@@ -315,7 +320,7 @@ class FinancialAnalysisService:
                     descripcion=f"Esta categoría representa el {categoria_mayor[1]['porcentaje']:.1f}% de tus gastos",
                     prioridad="alta",
                     categoria_relacionada=categoria_mayor[0],
-                    ahorro_estimado=categoria_mayor[1]["total"] * 0.1
+                    ahorro_estimado=categoria_mayor[1]["total"]
                 ))
         
         # Sugerencia sobre balance
@@ -335,24 +340,27 @@ class FinancialAnalysisService:
         
         return suggestions
     
-    def get_all_transactions(self, user_id: str) -> List[Dict]:
+    def get_all_transactions(self, user_id: str, access_token: str) -> List[Dict]:
         """Retorna todas las transacciones del usuario"""
-        response = self.supabase.table("transactions").select("*").eq("user_id", user_id).order("fecha", desc=True).execute()
+        supabase = get_supabase(access_token)
+        response = supabase.table("transactions").select("*").eq("user_id", user_id).order("fecha", desc=True).execute()
         return response.data
     
-    def get_transactions_by_category(self, user_id: str, category: str) -> List[Dict]:
+    def get_transactions_by_category(self, user_id: str, access_token: str, category: str) -> List[Dict]:
         """Retorna transacciones de una categoría del usuario"""
-        response = self.supabase.table("transactions").select("*").eq("user_id", user_id).eq("categoria", category).order("fecha", desc=True).execute()
+        supabase = get_supabase(access_token)
+        response = supabase.table("transactions").select("*").eq("user_id", user_id).eq("categoria", category).order("fecha", desc=True).execute()
         return response.data
     
-    def clear_all_transactions(self, user_id: str) -> int:
+    def clear_all_transactions(self, user_id: str, access_token: str) -> int:
         """Elimina todas las transacciones del usuario y retorna cantidad eliminada"""
+        supabase = get_supabase(access_token)
         # Primero obtenemos el conteo
-        response = self.supabase.table("transactions").select("id", count="exact").eq("user_id", user_id).execute()
+        response = supabase.table("transactions").select("id", count="exact").eq("user_id", user_id).execute()
         count = response.count or 0
         
         # Luego eliminamos
-        self.supabase.table("transactions").delete().eq("user_id", user_id).execute()
+        supabase.table("transactions").delete().eq("user_id", user_id).execute()
         
         logger.info(f"Eliminadas {count} transacciones del usuario {user_id}")
         return count

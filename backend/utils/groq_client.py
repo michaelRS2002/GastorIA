@@ -28,7 +28,7 @@ def _load_env_file(env_path: Path) -> None:
 
 
 # Cargar variables de entorno
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]  # backend/
 _load_env_file(PROJECT_ROOT / ".env")
 
 logger = logging.getLogger(__name__)

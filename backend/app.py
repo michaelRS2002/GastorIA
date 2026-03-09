@@ -48,12 +48,12 @@ supabase = get_supabase()
 
 # ==================== MIDDLEWARE DE AUTENTICACIÓN ====================
 
-def get_user_id_from_token():
-    """Extrae el user_id del token JWT de Supabase"""
+def get_user_id_and_token():
+    """Extrae el user_id y token JWT de Supabase"""
     auth_header = request.headers.get('Authorization')
     
     if not auth_header or not auth_header.startswith('Bearer '):
-        return None
+        return None, None
     
     token = auth_header.split(' ')[1]
     
@@ -61,22 +61,23 @@ def get_user_id_from_token():
         # Decodificar el token sin verificar la firma (Supabase ya lo verificó)
         # En producción, deberías verificar con el JWT_SECRET de Supabase
         decoded = jwt.decode(token, options={"verify_signature": False})
-        return decoded.get('sub')  # 'sub' contiene el user_id
+        user_id = decoded.get('sub')  # 'sub' contiene el user_id
+        return user_id, token
     except Exception as e:
         logger.error(f"Error decodificando token: {e}")
-        return None
+        return None, None
 
 def require_auth(f):
     """Decorador para requerir autenticación"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        user_id = get_user_id_from_token()
-        if not user_id:
+        user_id, access_token = get_user_id_and_token()
+        if not user_id or not access_token:
             return jsonify({
                 "success": False,
                 "error": "No autorizado. Token inválido o faltante"
             }), 401
-        return f(user_id, *args, **kwargs)
+        return f(user_id, access_token, *args, **kwargs)
     return decorated_function
 
 # ==================== RUTAS DE TRANSACCIONES ====================
@@ -96,10 +97,10 @@ def health():
 
 @app.route('/api/transactions', methods=['GET'])
 @require_auth
-def get_transactions(user_id):
+def get_transactions(user_id, access_token):
     """Obtiene todas las transacciones del usuario"""
     try:
-        transactions = service.get_all_transactions(user_id)
+        transactions = service.get_all_transactions(user_id, access_token)
         return jsonify({
             "success": True,
             "total": len(transactions),
@@ -114,10 +115,10 @@ def get_transactions(user_id):
 
 @app.route('/api/transactions/category/<category>', methods=['GET'])
 @require_auth
-def get_transactions_by_category(user_id, category):
+def get_transactions_by_category(user_id, access_token, category):
     """Obtiene transacciones por categoría del usuario"""
     try:
-        transactions = service.get_transactions_by_category(user_id, category)
+        transactions = service.get_transactions_by_category(user_id, access_token, category)
         return jsonify({
             "success": True,
             "category": category,
@@ -133,10 +134,10 @@ def get_transactions_by_category(user_id, category):
 
 @app.route('/api/transactions', methods=['DELETE'])
 @require_auth
-def clear_transactions(user_id):
+def clear_transactions(user_id, access_token):
     """Elimina todas las transacciones del usuario"""
     try:
-        count = service.clear_all_transactions(user_id)
+        count = service.clear_all_transactions(user_id, access_token)
         return jsonify({
             "success": True,
             "message": f"Se eliminaron {count} transacciones",
@@ -153,7 +154,7 @@ def clear_transactions(user_id):
 
 @app.route('/api/process-audio', methods=['POST'])
 @require_auth
-def process_audio(user_id):
+def process_audio(user_id, access_token):
     """
     Procesa entrada de audio/texto
     
@@ -182,7 +183,7 @@ def process_audio(user_id):
             }), 400
         
         logger.info(f"Procesando para usuario {user_id}: {text}")
-        result = service.process_audio_input(text, user_id, use_ai=use_ai)
+        result = service.process_audio_input(text, user_id, access_token, use_ai=use_ai)
         
         return jsonify(result)
     
@@ -197,7 +198,7 @@ def process_audio(user_id):
 
 @app.route('/api/analysis/<period>', methods=['GET'])
 @require_auth
-def get_analysis(user_id, period):
+def get_analysis(user_id, access_token, period):
     """
     Obtiene análisis para un período
     
@@ -212,7 +213,7 @@ def get_analysis(user_id, period):
                 "error": f"Período inválido. Válidos: {', '.join(valid_periods)}"
             }), 400
         
-        analysis = service.generate_analysis(user_id, period=period)
+        analysis = service.generate_analysis(user_id, access_token, period=period)
         
         return jsonify({
             "success": True,
@@ -228,11 +229,11 @@ def get_analysis(user_id, period):
 
 @app.route('/api/suggestions', methods=['GET'])
 @require_auth
-def get_suggestions(user_id):
+def get_suggestions(user_id, access_token):
     """Obtiene sugerencias basadas en el análisis mensual"""
     try:
         period = request.args.get('period', 'mensual')
-        analysis = service.generate_analysis(user_id, period=period)
+        analysis = service.generate_analysis(user_id, access_token, period=period)
         suggestions = service.get_suggestions(analysis)
         
         return jsonify({
@@ -250,7 +251,7 @@ def get_suggestions(user_id):
 
 @app.route('/api/analysis-with-suggestions/<period>', methods=['GET'])
 @require_auth
-def get_analysis_with_suggestions(user_id, period):
+def get_analysis_with_suggestions(user_id, access_token, period):
     """Obtiene análisis completo con sugerencias"""
     try:
         valid_periods = ["diario", "semanal", "mensual", "bimestral", "semestral", "anual"]
@@ -261,7 +262,7 @@ def get_analysis_with_suggestions(user_id, period):
                 "error": f"Período inválido. Válidos: {', '.join(valid_periods)}"
             }), 400
         
-        analysis = service.generate_analysis(user_id, period=period)
+        analysis = service.generate_analysis(user_id, access_token, period=period)
         suggestions = service.get_suggestions(analysis)
         
         return jsonify({
