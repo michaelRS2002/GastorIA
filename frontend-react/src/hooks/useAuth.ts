@@ -1,7 +1,7 @@
 // Hook para autenticación con Supabase
 
 import { useEffect, useState } from 'react';
-import { User, Session, AuthError } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
 
 export const useAuth = () => {
