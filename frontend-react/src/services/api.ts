@@ -24,7 +24,6 @@ class ApiClient {
 
   constructor() {
     this.baseUrl = API_BASE_URL;
-    console.log('API Base URL:', this.baseUrl);
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
