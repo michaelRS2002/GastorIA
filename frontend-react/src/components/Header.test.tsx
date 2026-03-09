@@ -1,6 +1,7 @@
 /**
  * Tests para el componente Header
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Header } from '../components/Header';
@@ -13,7 +14,10 @@ const mockUser = {
     full_name: 'Test User',
     avatar_url: 'https://example.com/avatar.jpg',
   },
-};
+  app_metadata: {},
+  aud: 'authenticated',
+  created_at: '2026-01-01T00:00:00Z',
+} as any;
 
 const mockAuthContext = {
   user: mockUser,

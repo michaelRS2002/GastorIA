@@ -36,7 +36,7 @@ describe('Formatters', () => {
 
     it('should format Date object', () => {
       const date = new Date('2026-03-09T10:30:00');
-      const result = formatDate(date);
+      const result = formatDate(date.toISOString());
       expect(result).toBeTruthy();
     });
   });

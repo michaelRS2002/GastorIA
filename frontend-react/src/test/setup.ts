@@ -8,7 +8,7 @@ afterEach(() => {
 });
 
 // Mock de la Web Speech API
-global.SpeechRecognition = vi.fn().mockImplementation(() => ({
+(global as any).SpeechRecognition = vi.fn().mockImplementation(() => ({
   start: vi.fn(),
   stop: vi.fn(),
   abort: vi.fn(),
@@ -16,7 +16,7 @@ global.SpeechRecognition = vi.fn().mockImplementation(() => ({
   removeEventListener: vi.fn(),
 }));
 
-global.webkitSpeechRecognition = global.SpeechRecognition;
+(global as any).webkitSpeechRecognition = (global as any).SpeechRecognition;
 
 // Mock de window.matchMedia
 Object.defineProperty(window, 'matchMedia', {

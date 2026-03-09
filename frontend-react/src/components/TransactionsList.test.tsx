@@ -1,7 +1,7 @@
 /**
  * Tests para el componente TransactionsList
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { TransactionsList } from '../components/TransactionsList';
 import type { Transaction } from '../types';
@@ -33,35 +33,35 @@ const mockTransactions: Transaction[] = [
 
 describe('TransactionsList', () => {
   it('should render transaction items', () => {
-    render(<TransactionsList transactions={mockTransactions} />);
+    render(<TransactionsList transactions={mockTransactions} onClearAll={vi.fn()} />);
 
     expect(screen.getByText(/Almuerzo en restaurante/i)).toBeTruthy();
     expect(screen.getByText(/Pago mensual/i)).toBeTruthy();
   });
 
   it('should display transaction amounts', () => {
-    render(<TransactionsList transactions={mockTransactions} />);
+    render(<TransactionsList transactions={mockTransactions} onClearAll={vi.fn()} />);
 
     expect(screen.getByText(/50.000/)).toBeTruthy();
     expect(screen.getByText(/1.500.000/)).toBeTruthy();
   });
 
   it('should show categories', () => {
-    render(<TransactionsList transactions={mockTransactions} />);
+    render(<TransactionsList transactions={mockTransactions} onClearAll={vi.fn()} />);
 
     expect(screen.getByText(/Comida/)).toBeTruthy();
     expect(screen.getByText(/Salario/)).toBeTruthy();
   });
 
   it('should render empty state when no transactions', () => {
-    render(<TransactionsList transactions={[]} />);
+    render(<TransactionsList transactions={[]} onClearAll={vi.fn()} />);
 
     const emptyState = screen.getByText(/No hay transacciones/i);
     expect(emptyState).toBeTruthy();
   });
 
   it('should differentiate between gasto and ingreso', () => {
-    const { container } = render(<TransactionsList transactions={mockTransactions} />);
+    const { container } = render(<TransactionsList transactions={mockTransactions} onClearAll={vi.fn()} />);
 
     // Buscar elementos con clases de gasto e ingreso
     const transactionItems = container.querySelectorAll('[class*="transaction"]');
