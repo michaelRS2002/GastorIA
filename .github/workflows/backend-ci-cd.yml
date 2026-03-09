@@ -2,14 +2,10 @@ name: Backend CI/CD - Render
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
     paths:
       - 'backend/**'
       - '.github/workflows/backend-ci-cd.yml'
-  pull_request:
-    branches: [ main, master ]
-    paths:
-      - 'backend/**'
 
 jobs:
   # Job de testing y linting
@@ -48,17 +44,29 @@ jobs:
         # Exit-zero treats all errors as warnings
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,__pycache__
     
+    - name: Run tests with pytest
+      run: |
+        cd backend
+        pytest -v --cov=. --cov-report=term --cov-fail-under=45
+      env:
+        AI_PROVIDER: groq
+        AI_API_BASE_URL: https://api.groq.com/openai/v1
+        AI_API_KEY: test_key_for_ci
+        AI_API_MODEL: llama-3.3-70b-versatile
+        SUPABASE_URL: https://test.supabase.co
+        SUPABASE_KEY: test_key_for_ci
+        FLASK_DEBUG: True
+    
     - name: Check Python files exist
       run: |
         cd backend
         python -m py_compile app.py
         python -m py_compile models/financial_service.py
   
-  # Job de deploy a Render (solo en push a main/master)
+  # Job de deploy a Render
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     
     steps:
     - name: Trigger Render Deploy

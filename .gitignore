@@ -16,6 +16,19 @@ dist/
 build/
 *.egg-info/
 
+# Test coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+
+# Frontend coverage
+coverage/
+.nyc_output/
+
 # IDE
 .vscode/
 .idea/

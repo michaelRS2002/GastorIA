@@ -17,6 +17,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Export AuthContext for testing
+export { AuthContext };
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const auth = useAuth();
 
