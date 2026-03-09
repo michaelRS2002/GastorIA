@@ -11,13 +11,20 @@ import type {
   AnalysisPeriod,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// Si VITE_API_BASE_URL ya incluye /api, úsalo tal cual
+// Si no, agregar /api automáticamente para desarrollo
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL 
+  ? import.meta.env.VITE_API_BASE_URL.endsWith('/api') 
+    ? import.meta.env.VITE_API_BASE_URL 
+    : `${import.meta.env.VITE_API_BASE_URL}/api`
+  : '/api';
 
 class ApiClient {
   private baseUrl: string;
 
   constructor() {
     this.baseUrl = API_BASE_URL;
+    console.log('API Base URL:', this.baseUrl);
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
