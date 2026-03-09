@@ -21,7 +21,36 @@ from models.financial_service import FinancialAnalysisService
 
 # Crear aplicación
 app = Flask(__name__)
-CORS(app)
+
+# Configurar CORS
+allowed_origins = [
+    "http://localhost:5173",  # Vite dev
+    "http://localhost:3000",  # React dev alternativo
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+
+# Agregar origen de producción si existe
+frontend_url = os.getenv('FRONTEND_URL')
+if frontend_url:
+    allowed_origins.append(frontend_url)
+    # También agregar variantes con/sin www
+    if frontend_url.startswith('https://'):
+        domain = frontend_url.replace('https://', '')
+        allowed_origins.append(f'https://www.{domain}')
+        if not frontend_url.startswith('https://www.'):
+            allowed_origins.append(frontend_url.replace('https://', 'https://www.'))
+
+CORS(app, 
+     resources={r"/api/*": {
+         "origins": allowed_origins,
+         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         "allow_headers": ["Content-Type", "Authorization"],
+         "supports_credentials": True,
+         "max_age": 3600
+     }})
+
+logger.info(f"CORS configurado para orígenes: {allowed_origins}")
 
 # Directorio base
 BASE_DIR = Path(__file__).parent
