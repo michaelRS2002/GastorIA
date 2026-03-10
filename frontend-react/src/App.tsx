@@ -32,6 +32,7 @@ import type { TabId } from './components';
 
 import './styles/app.css';
 import './styles/components.css';
+import mascotaPng from './assets/mascota.png';
 
 // Componente interno que usa el contexto de autenticación
 function AppContent() {
@@ -218,7 +219,10 @@ const loadAnalysis = useCallback(
       </main>
 
       <footer className="footer">
-        <p>🤖 Gastor AI © 2026 - Powered by IA</p>
+        <p>
+          <img src={mascotaPng} alt="Gastor AI" style={{ width: '24px', height: '24px', verticalAlign: 'middle', marginRight: '8px' }} />
+          Gastor AI © 2026 - v1.0
+        </p>
       </footer>
 
       <Loading show={isLoading} />
