@@ -42,15 +42,17 @@ describe('TransactionsList', () => {
   it('should display transaction amounts', () => {
     render(<TransactionsList transactions={mockTransactions} onClearAll={vi.fn()} />);
 
-    expect(screen.getByText(/50.000/)).toBeTruthy();
-    expect(screen.getByText(/1.500.000/)).toBeTruthy();
+    // Usar getAllByText porque ahora hay duplicados (vista compacta + detallada)
+    expect(screen.getAllByText(/50.000/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/1.500.000/).length).toBeGreaterThan(0);
   });
 
   it('should show categories', () => {
     render(<TransactionsList transactions={mockTransactions} onClearAll={vi.fn()} />);
 
-    expect(screen.getByText(/Comida/)).toBeTruthy();
-    expect(screen.getByText(/Salario/)).toBeTruthy();
+    // Usar getAllByText porque ahora hay duplicados (vista compacta + detallada)
+    expect(screen.getAllByText(/Comida/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Salario/).length).toBeGreaterThan(0);
   });
 
   it('should render empty state when no transactions', () => {

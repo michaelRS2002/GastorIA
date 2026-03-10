@@ -1,13 +1,13 @@
 /* ==================== VARIABLES GLOBALES ==================== */
 :root {
-  --primary-color: #2563eb;
-  --primary-dark: #1e40af;
-  --primary-light: #3b82f6;
+  --primary-color: #9333ea;
+  --primary-dark: #7e22ce;
+  --primary-light: #a855f7;
   --success-color: #10b981;
   --warning-color: #f59e0b;
   --danger-color: #ef4444;
-  --background: #f9fafb;
-  --surface: #ffffff;
+  --background: #ffffff;
+  --surface: #fafafa;
   --text-primary: #111827;
   --text-secondary: #6b7280;
   --border-color: #e5e7eb;

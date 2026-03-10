@@ -3,7 +3,7 @@ Servicio principal de análisis financiero
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import logging
@@ -237,7 +237,7 @@ class FinancialAnalysisService:
         Returns:
             Objeto Analysis
         """
-        end_date = end_date or datetime.now()
+        end_date = end_date or datetime.now(timezone.utc)
         
         # Calcula fecha de inicio según período
         period_days = {

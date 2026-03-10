@@ -23,14 +23,14 @@ export const Login = () => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>💰 Asistente Financiero</h1>
-          <p className="subtitle">Gestiona tus gastos con inteligencia artificial</p>
+          <h1>🤖 Gastor AI</h1>
+          <p className="subtitle">Tu asistente financiero inteligente</p>
         </div>
 
         <div className="login-content">
-          <h2>Iniciar Sesión</h2>
+          <h2>Bienvenido de vuelta</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '30px' }}>
-            Inicia sesión con tu cuenta de Google para acceder a tu historial financiero
+            Ingresa para continuar
           </p>
 
           {error && (
@@ -73,16 +73,6 @@ export const Login = () => {
               </>
             )}
           </button>
-
-          <div className="login-features">
-            <h3>¿Por qué iniciar sesión?</h3>
-            <ul>
-              <li>✅ Tus datos están seguros y privados</li>
-              <li>✅ Accede a tu historial desde cualquier dispositivo</li>
-              <li>✅ Análisis personalizados con IA</li>
-              <li>✅ Sincronización automática</li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>

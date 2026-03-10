@@ -11,3 +11,5 @@ export { Loading } from './Loading';
 export { ToastContainer } from './ToastContainer';
 export { Login } from './Login';
 export { UserProfile } from './UserProfile';
+export { Tabs, TabPanel } from './Tabs';
+export type { TabId } from './Tabs';

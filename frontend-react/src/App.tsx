@@ -25,7 +25,10 @@ import {
   ToastContainer,
   Login,
   UserProfile,
+  Tabs,
+  TabPanel,
 } from './components';
+import type { TabId } from './components';
 
 import './styles/app.css';
 import './styles/components.css';
@@ -39,6 +42,7 @@ function AppContent() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [currentPeriod, setCurrentPeriod] = useState<AnalysisPeriod>('mensual');
+  const [activeTab, setActiveTab] = useState<TabId>('registrar');
 
   const { toasts, showToast, removeToast } = useToast();
 
@@ -191,24 +195,30 @@ const loadAnalysis = useCallback(
       <UserProfile />
       <StatusBar />
 
+      <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
+
       <main className="main-content">
-        <TransactionInput onProcess={handleProcessTransaction} isLoading={isLoading} />
+        <TabPanel tabId="registrar" activeTab={activeTab}>
+          <TransactionInput onProcess={handleProcessTransaction} isLoading={isLoading} />
+          <ResultDisplay result={lastResult} />
+        </TabPanel>
 
-        <ResultDisplay result={lastResult} />
+        <TabPanel tabId="analisis" activeTab={activeTab}>
+          <AnalysisSection
+            analysis={analysis}
+            onAnalyze={loadAnalysis}
+            isLoading={isLoading}
+          />
+          <SuggestionsSection suggestions={suggestions} />
+        </TabPanel>
 
-        <AnalysisSection
-          analysis={analysis}
-          onAnalyze={loadAnalysis}
-          isLoading={isLoading}
-        />
-
-        <SuggestionsSection suggestions={suggestions} />
-
-        <TransactionsList transactions={transactions} onClearAll={handleClearAll} />
+        <TabPanel tabId="transacciones" activeTab={activeTab}>
+          <TransactionsList transactions={transactions} onClearAll={handleClearAll} />
+        </TabPanel>
       </main>
 
       <footer className="footer">
-        <p>💰 Asistente Financiero © 2026 - Powered by IA</p>
+        <p>🤖 Gastor AI © 2026 - Powered by IA</p>
       </footer>
 
       <Loading show={isLoading} />
