@@ -188,8 +188,6 @@ AI_API_MODEL=gpt-4o-mini
 | `GET` | `/api/analysis/{period}` | Análisis financiero |
 | `GET` | `/api/suggestions` | Sugerencias de ahorro |
 
-**Ver documentación completa:** [BACKEND-FLOW.md](BACKEND-FLOW.md#-api-endpoints)
-
 ### Ejemplo de Uso
 
 ```bash
@@ -443,4 +441,5 @@ Abre un issue en GitHub con:
 ---
 
 **Desarrollado con ❤️ para PI-II**
+
 
