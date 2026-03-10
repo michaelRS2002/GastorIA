@@ -13,13 +13,15 @@ export const formatCurrency = (amount: number): string => {
 
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('es-CO', {
+  return new Intl.DateTimeFormat('es-CO', {
+    timeZone: 'America/Bogota',
     year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-  });
+    hour12: true,
+  }).format(date);
 };
 
 export const formatPercentage = (value: number): string => {

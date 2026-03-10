@@ -13,7 +13,6 @@ export const SuggestionsSection = ({ suggestions }: SuggestionsSectionProps) => 
 
   return (
     <section className="section suggestions-section">
-      <h2>💡 Sugerencias de Inversión</h2>
       <div className="suggestions-content">
         {suggestions.map((suggestion, idx) => (
           <div key={idx} className={`suggestion-card ${suggestion.prioridad}`}>

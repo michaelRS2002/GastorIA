@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pathlib import Path
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 import jwt
 from functools import wraps
@@ -92,7 +92,7 @@ def health():
         "groq_available": ai_available,
         "ai_available": ai_available,
         "ai_provider": ai_provider,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     })
 
 @app.route('/api/transactions', methods=['GET'])

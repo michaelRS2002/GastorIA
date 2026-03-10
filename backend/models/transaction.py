@@ -2,7 +2,7 @@
 Modelos de datos para transacciones financieras
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 from dataclasses import dataclass, field, asdict
 from enum import Enum
@@ -39,7 +39,7 @@ class Transaction:
     descripcion: str
     confianza: float
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    fecha: datetime = field(default_factory=datetime.now)
+    fecha: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     notas: Optional[str] = None
     user_id: Optional[str] = None
     created_at: Optional[datetime] = None

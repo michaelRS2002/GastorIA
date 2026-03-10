@@ -37,17 +37,18 @@ describe('Header', () => {
       </AuthContext.Provider>
     );
 
-    expect(screen.getByText(/Asistente Financiero/i)).toBeTruthy();
+    expect(screen.getByText(/Gastor AI/i)).toBeTruthy();
   });
 
-  it('should show subtitle', () => {
+  it('should show greeting when authenticated', () => {
     render(
       <AuthContext.Provider value={mockAuthContext}>
         <Header />
       </AuthContext.Provider>
     );
 
-    expect(screen.getByText(/Gestiona tus gastos con voz e IA/i)).toBeTruthy();
+    // Debe mostrar el saludo personalizado con el nombre normalizado
+    expect(screen.getByText(/Test/i)).toBeTruthy();
   });
 
   it('should render header element', () => {
@@ -61,19 +62,14 @@ describe('Header', () => {
     expect(header).toBeTruthy();
   });
 
-  it('should render consistently regardless of auth state', () => {
-    const loggedOutContext = {
-      ...mockAuthContext,
-      user: null,
-    };
-
+  it('should render mascot image', () => {
     render(
-      <AuthContext.Provider value={loggedOutContext}>
+      <AuthContext.Provider value={mockAuthContext}>
         <Header />
       </AuthContext.Provider>
     );
 
-    // El header siempre muestra el mismo contenido
-    expect(screen.getByText(/Asistente Financiero/i)).toBeTruthy();
+    const mascot = screen.getByAltText(/Mascota Gastor AI/i);
+    expect(mascot).toBeTruthy();
   });
 });

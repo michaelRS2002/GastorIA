@@ -20,8 +20,6 @@ export const AnalysisSection = ({ analysis, onAnalyze, isLoading }: AnalysisSect
 
   return (
     <section className="section analysis-section">
-      <h2>📊 Análisis</h2>
-
       <div className="period-selector">
         <label htmlFor="periodSelect">Período:</label>
         <select
