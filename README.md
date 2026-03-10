@@ -335,7 +335,7 @@ El sistema entiende expresiones coloquiales colombianas:
 ### Frontend
 - **React 18** - UI Library
 - **TypeScript** - Tipado estático
-- *👥 Equipo - Proyecto Integrador II
+- **👥 Equipo** - Proyecto Integrador II
 
 **Universidad del Valle - Facultad de Ingeniería**
 
@@ -441,5 +441,6 @@ Abre un issue en GitHub con:
 ---
 
 **Desarrollado con ❤️ para PI-II**
+
 
 
