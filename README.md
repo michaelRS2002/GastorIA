@@ -401,7 +401,7 @@ Este proyecto está bajo la licencia MIT.
 
 ---
 
-**Desarrollado con ❤️ para Proyecto Integrador II - Universidad del Valle
+**Desarrollado con ❤️ para Proyecto Integrador II - Universidad del Valle**
 - Requests - HTTP client para IA
 - Gunicorn - Servidor WSGI (producción)
 - jsonschema - Validación de datos
@@ -441,6 +441,7 @@ Abre un issue en GitHub con:
 ---
 
 **Desarrollado con ❤️ para PI-II**
+
 
 
 
